@@ -48,3 +48,34 @@ reversed_string = my_string[::-1]  # Reverse the string using slicing
 print(reversed_string)  # Output: "!dlroW ,olleH"
 
 """
+
+# Create the sidebar content in Streamlit
+with st.sidebar:
+    
+    # Set the sidebar title
+    st.title("🤖 AI Coder")
+    
+    # Display an explanatory text about the assistant
+    st.markdown("An AI assistant focused on Python programming to help beginners.")
+    
+    # Field to enter the Groq API key
+    groq_api_key = st.text_input(
+        "Enter your Groq API Key", 
+        type="password",
+        help="Obtain your key at https://console.groq.com/keys"
+    )
+
+    # Add dividers and extra explanations in the sidebar
+    st.markdown("---")
+    st.markdown("Designed to assist with your Python programming queries. AI might make mistakes. Always double-check the answers.")
+
+    st.markdown("---")
+    st.markdown("Learn more about Python programming courses and resources:")
+
+    # Link to a general website (replace as needed)
+    st.markdown("🔗 [Learn Python Programming](https://www.siteexample.com.br/)")
+    
+    # Button to send an email for support
+    st.link_button("✉️ Contact Support", "mail to:support@example.com")
+    
+
