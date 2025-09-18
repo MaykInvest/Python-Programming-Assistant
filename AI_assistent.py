@@ -99,6 +99,22 @@ for message in st.session_state.messages:
 # Initialize the Groq client variable as None
 client = None
 
+# Check if the user provided the Groq API key
+if groq_api_key:
+    
+    try:
+        # Create Groq client with the provided API key
+        client = Groq(api_key=groq_api_key)
+    
+    except Exception as e:
+        # Show an error if there's a problem initializing the client
+        st.sidebar.error(f"Error initializing Groq client: {e}")
+        st.stop()
+
+# If no key is provided but there are already messages, show a warning
+elif st.session_state.messages:
+    st.warning("Please enter your Groq API Key in the sidebar to continue.")
+
 
     
 
