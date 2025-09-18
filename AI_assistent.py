@@ -60,10 +60,10 @@ with st.sidebar:
     
     # Field to enter the Groq API key
     groq_api_key = st.text_input(
-        "Enter your Groq API Key", 
+        "Enter your Groq API Key",
         type="password",
         help="Obtain your key at https://console.groq.com/keys"
-    )
+        )
 
     # Add dividers and extra explanations in the sidebar
     st.markdown("---")
@@ -77,5 +77,15 @@ with st.sidebar:
     
     # Button to send an email for support
     st.link_button("✉️ Contact Support", "mail to:support@example.com")
+
+# Main title of the app
+st.title("AI Coder")
+
+# Additional subtitle
+st.title("Personal Python Programming Assistant 🐍")
+
+# Auxiliary text below the title
+st.caption("Ask your question about the Python Language and get code, explanations, and references.")
+
     
 
