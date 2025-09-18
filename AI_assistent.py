@@ -87,5 +87,18 @@ st.title("Personal Python Programming Assistant 🐍")
 # Auxiliary text below the title
 st.caption("Ask your question about the Python Language and get code, explanations, and references.")
 
+# Initialize the message history in the session if it doesn't exist yet
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Display all previous messages stored in the session state
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Initialize the Groq client variable as None
+client = None
+
+
     
 
