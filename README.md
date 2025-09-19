@@ -16,7 +16,7 @@ pip install pip
 pip install -r requirements.txt
 
 # Run the app
-streamlit run AI_assistent.py
+streamlit run AI_assistant.py
 
 # Examples of how to use the assistant:
 - How do I create a hello world in Python?
