@@ -5,7 +5,7 @@ Features  🐍 Focused on Python programming  💬 Interactive chat interface  �
 ### Open the terminal or command prompt, navigate to the folder with the files and run the command below to create a virtual environment.
 
 # Create a virtual environment:
-python3 -m venv venv
+- python3 -m venv venv
 
 ### Activate the environment:
 - .venv/scripts/activate  <-- Windows
@@ -16,7 +16,7 @@ python3 -m venv venv
 - pip install -r requirements.txt
 
 # Run the app
-streamlit run AI_assistant.py
+- streamlit run AI_assistant.py
 
 ### Examples of how to use the assistant:
 - How do I create a hello world in Python?
@@ -24,5 +24,5 @@ streamlit run AI_assistant.py
 - How do I use the map function in Python? Give me an example with lambda.
 
 ### To deactivate:
-deactivate
+- deactivate
 
