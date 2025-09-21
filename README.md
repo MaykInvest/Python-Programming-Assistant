@@ -12,8 +12,8 @@ python3 -m venv venv
 - source venv/bin/activate  <-- Linux/MacOS
 
 ### Install pip and dependencies:
-pip install pip
-pip install -r requirements.txt
+- pip install pip
+- pip install -r requirements.txt
 
 # Run the app
 streamlit run AI_assistant.py
