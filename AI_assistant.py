@@ -11,7 +11,7 @@ from groq import Groq
 
 # Configure the Streamlit page with title, icon, layout, and initial sidebar state
 st.set_page_config(
-    page_title="DSA AI Coder",
+    page_title="AI Coder",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
