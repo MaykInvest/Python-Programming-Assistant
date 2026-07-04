@@ -1,174 +1,273 @@
-# Creating Your Python Programming Assistant in Python
-from openai.types.chat import ChatCompletionMessageParam
-# Import module to interact with the operating system
-import os
-
-# Import the Streamlit library to create the interactive web interface
 import streamlit as st
-
-# Import the Groq class to connect to the Groq API and access the LLM
 from groq import Groq
 
-# Configure the Streamlit page with title, icon, layout, and initial sidebar state
+# ─────────────────────────────────────────────
+# PAGE CONFIG
+# ─────────────────────────────────────────────
 st.set_page_config(
     page_title="AI Coder",
-    page_icon="🤖",
+    page_icon="🐍",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Define a system prompt that describes the rules and behavior of the AI assistant
-CUSTOM_PROMPT = """
-You are "Python Coder," an AI assistant specialized in **Python programming**. Your goal is to assist **beginner programmers** by providing **clear, actionable help** with Python programming questions and challenges.
+# ─────────────────────────────────────────────
+# CUSTOM CSS
+# ─────────────────────────────────────────────
+st.markdown("""
+<style>
+    /* Hide default Streamlit header */
+    #MainMenu, footer, header { visibility: hidden; }
 
-### Operational Guidelines:
-1. **Programming Focus**: Respond only to questions related to **Python programming**, including syntax, libraries, functions, modules, best practices, and general coding tasks. If the question is about anything else, politely redirect the user, reminding them that your focus is exclusively on programming.
+    /* App background */
+    .stApp { background-color: #0d1117; }
 
-2. **Answer Structure**: Every response should be structured as follows:
-   - **1. Clear Conceptual Explanation**: Start with a **brief and simple explanation** of the concept or task. Use clear, beginner-friendly language, and avoid unnecessary jargon.
-   - **2. Python Code Example**: Provide a concise and functional Python code example that directly addresses the question or problem. Include **well-commented code** explaining the key parts.
-   - **3. Detailed Code Breakdown**: After the code, explain each part of the code step-by-step. Highlight the **logic** behind the code, the **functions** or methods used, and why they are necessary.
-   - **4. 📚 Reference Documentation**: Include a link to the official Python documentation or relevant library documentation for further reading or exploration.
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #161b22;
+        border-right: 1px solid #30363d;
+    }
 
-3. **Clarity & Precision**: Ensure that your responses are clear, accurate, and easy to follow. **Avoid unnecessary complexity** and use simple terms when possible. If technical terms are required, explain them briefly.
+    /* Chat input */
+    [data-testid="stChatInput"] textarea {
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
+        color: #e6edf3 !important;
+        border-radius: 8px !important;
+    }
 
-4. **Politeness & Encouragement**: Maintain a **positive and supportive tone**. Encourage learning by acknowledging the user’s efforts and guiding them with constructive feedback when necessary.
+    /* User message bubble */
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-user"]) {
+        background-color: #1c2128;
+        border-radius: 10px;
+        border: 1px solid #30363d;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
 
-### Example of Answer:
-If a user asks how to reverse a string in Python, your response should:
-1. Explain how string reversal works in Python.
-2. Provide a short Python code example that reverses a string.
-3. Break down the code step-by-step to explain the logic.
-4. Provide a reference link to Python string methods in the official documentation.
+    /* Assistant message bubble */
+    [data-testid="stChatMessage"]:has([data-testid="chatAvatarIcon-assistant"]) {
+        background-color: #161b22;
+        border-radius: 10px;
+        border: 1px solid #238636;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
 
-```python
-# Python code to reverse a string
-my_string = "Hello, World!"  # Define the string
-reversed_string = my_string[::-1]  # Reverse the string using slicing
-print(reversed_string)  # Output: "!dlroW ,olleH"
+    /* Code blocks */
+    code {
+        background-color: #161b22 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 6px !important;
+    }
 
+    /* Metric cards */
+    [data-testid="stMetric"] {
+        background-color: #1c2128;
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        padding: 0.75rem;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background-color: #238636;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    .stButton > button:hover {
+        background-color: #2ea043;
+        color: white;
+    }
+
+    /* Title styling */
+    h1 { color: #e6edf3 !important; }
+    h2, h3 { color: #c9d1d9 !important; }
+    p, li { color: #8b949e; }
+</style>
+""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────
+# SYSTEM PROMPT
+# ─────────────────────────────────────────────
+SYSTEM_PROMPT = """
+You are "Python Coder," an AI assistant specialized in Python programming.
+Your goal is to help beginner programmers with clear, actionable answers.
+
+### Rules:
+1. Only answer questions related to Python programming — syntax, libraries,
+   functions, best practices, and general coding tasks. If the question is
+   off-topic, politely redirect the user.
+
+2. Structure every response as:
+   - Brief conceptual explanation (beginner-friendly, no jargon)
+   - A working Python code example with inline comments
+   - Step-by-step breakdown of the code
+   - Link to the relevant official documentation
+
+3. Keep answers clear and precise. Use simple language.
+   If technical terms are required, explain them briefly.
+
+4. Be encouraging and supportive. Acknowledge the user's effort
+   and guide them constructively.
 """
 
-# Create the sidebar content in Streamlit
-with st.sidebar:
-    
-    # Set the sidebar title
-    st.title("🤖 AI Coder")
-    
-    # Display an explanatory text about the assistant
-    st.markdown("An AI assistant focused on Python programming to help beginners.")
-    
-    # Field to enter the Groq API key
-    groq_api_key = st.text_input(
-        "Enter your Groq API Key",
-        type="password",
-        help="Obtain your key at https://console.groq.com/keys"
-        )
-
-    # Add dividers and extra explanations in the sidebar
-    st.markdown("---")
-    st.markdown("Designed to assist with your Python programming queries. AI might make mistakes. Always double-check the answers.")
-
-    st.markdown("---")
-    st.markdown("Learn more about Python programming courses and resources:")
-
-    # Link to a general website (replace as needed)
-    st.markdown("🔗 [Learn Python Programming](https://www.siteexample.com.br/)")
-    
-    # Button to send an email for support
-    st.link_button("✉️ Contact Support", "mail to:support@example.com")
-
-# Main title of the app
-st.title("AI Coder")
-
-# Additional subtitle
-st.title("Personal Python Programming Assistant 🐍")
-
-# Auxiliary text below the title
-st.caption("Ask your question about the Python Language and get code, explanations, and references.")
-
-# Initialize the message history in the session if it doesn't exist yet
+# ─────────────────────────────────────────────
+# SESSION STATE
+# ─────────────────────────────────────────────
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Display all previous messages stored in the session state
+if "total_questions" not in st.session_state:
+    st.session_state.total_questions = 0
+
+# ─────────────────────────────────────────────
+# SIDEBAR
+# ─────────────────────────────────────────────
+with st.sidebar:
+    st.markdown("## 🐍 AI Coder")
+    st.markdown("Your Python programming assistant for beginners.")
+    st.markdown("---")
+
+    groq_api_key = st.text_input(
+        "Groq API Key",
+        type="password",
+        placeholder="gsk_...",
+        help="Get your free key at https://console.groq.com/keys"
+    )
+
+    # Model selector
+    model = st.selectbox(
+        "Model",
+        options=[
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "llama3-8b-8192",
+            "gemma2-9b-it"
+        ],
+        index=0,
+        help="llama-3.3-70b-versatile is the most capable model."
+    )
+
+    # Temperature slider
+    temperature = st.slider(
+        "Creativity",
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
+        step=0.1,
+        help="Lower = more precise. Higher = more creative."
+    )
+
+    st.markdown("---")
+
+    # Stats
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Questions", st.session_state.total_questions)
+    with col2:
+        st.metric("Messages", len(st.session_state.messages))
+
+    st.markdown("---")
+
+    # Clear conversation
+    if st.button("🗑️ Clear conversation", use_container_width=True):
+        st.session_state.messages = []
+        st.session_state.total_questions = 0
+        st.rerun()
+
+    st.markdown("---")
+    st.markdown("#### 📚 Resources")
+    st.markdown("🔗 [Official Python Docs](https://docs.python.org/3/)")
+    st.markdown("🔗 [Groq Console](https://console.groq.com/keys)")
+    st.markdown("🔗 [Learn Python](https://www.learnpython.org/)")
+
+    st.markdown("---")
+    st.link_button("✉️ Contact Support", "mailto:support@example.com", use_container_width=True)
+
+    st.markdown(
+        "<p style='font-size:11px; color:#484f58; text-align:center;'>"
+        "AI Coder — powered by Groq API<br>"
+        "Answers may not always be correct.<br>Always verify your code.</p>",
+        unsafe_allow_html=True
+    )
+
+# ─────────────────────────────────────────────
+# MAIN AREA
+# ─────────────────────────────────────────────
+st.markdown("# 🐍 AI Coder")
+st.markdown("**Personal Python Programming Assistant** — Ask anything about Python and get code, explanations, and references.")
+st.markdown("---")
+
+# Welcome message when no conversation yet
+if not st.session_state.messages:
+    st.markdown("""
+    <div style='background-color:#161b22; border:1px solid #30363d; border-radius:10px; padding:1.5rem; margin-bottom:1rem;'>
+        <h4 style='color:#e6edf3; margin:0 0 0.75rem;'>👋 Welcome! Here are some things you can ask:</h4>
+        <ul style='color:#8b949e; margin:0;'>
+            <li>How do I reverse a string in Python?</li>
+            <li>What is the difference between a list and a tuple?</li>
+            <li>How do I read a CSV file with pandas?</li>
+            <li>Explain how for loops work in Python.</li>
+            <li>How do I handle exceptions with try/except?</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Display conversation history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Initialize the Groq client variable as None
-client = None
+# ─────────────────────────────────────────────
+# CHAT INPUT & RESPONSE
+# ─────────────────────────────────────────────
+if prompt := st.chat_input("Ask your Python question here..."):
 
-# Check if the user provided the Groq API key
-if groq_api_key:
-    
+    # API key check
+    if not groq_api_key:
+        st.warning("⚠️ Please enter your Groq API Key in the sidebar to get started.")
+        st.stop()
+
+    # Initialize Groq client
     try:
-        # Create Groq client with the provided API key
         client = Groq(api_key=groq_api_key)
-    
     except Exception as e:
-        # Show an error if there's a problem initializing the client
-        st.sidebar.error(f"Error initializing Groq client: {e}")
+        st.error(f"❌ Error initializing Groq client: {e}")
         st.stop()
 
-# If no key is provided but there are already messages, show a warning
-elif st.session_state.messages:
-    st.warning("Please enter your Groq API Key in the sidebar to continue.")
-
-
-# Capture the user's input from the chat
-if prompt := st.chat_input("What is your question about Python?"):
-
-    # If there's no valid client, show a warning and stop execution
-    if not client:
-        st.warning("Please enter your Groq API Key in the sidebar to get started.")
-        st.stop()
-
-    # Store the user's message in the session state
+    # Save and display user message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    
-    # Display the user's message in the chat
+    st.session_state.total_questions += 1
+
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Prepare messages to send to the API, including a system prompt
-    messages_for_api = [{"role": "system", "content": CUSTOM_PROMPT}]
+    # Build messages for API — system prompt + full history
+    messages_for_api = [{"role": "system", "content": SYSTEM_PROMPT}]
     for msg in st.session_state.messages:
-        messages_for_api.append(msg)
-    
-   
-    # Create the assistant's response in the chat
+        messages_for_api.append({"role": msg["role"], "content": msg["content"]})
+
+    # Generate and display assistant response
     with st.chat_message("assistant"):
-        
-        with st.spinner("Analyzing your question..."):
-            
+        with st.spinner("Thinking..."):
             try:
-                # Call the Groq API to generate the assistant's response
-                chat_completion = client.chat.completions.create(
+                response = client.chat.completions.create(
                     messages=messages_for_api,
-                    model="openai/gpt-oss-20b", 
-                    temperature=0.7,
-                    max_tokens=2048,)
+                    model=model,
+                    temperature=temperature,
+                    max_tokens=2048,
+                )
 
-                # Extract the response generated by the API
-                assistant_response = chat_completion.choices[0].message.content
-                
-                # Display the response in Streamlit
+                assistant_response = response.choices[0].message.content
                 st.markdown(assistant_response)
-                
-                # Store the assistant's response in the session state
-                st.session_state.messages.append({"role": "assistant", "content": assistant_response})
 
-            # If an error occurs in API communication, show an error message
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": assistant_response
+                })
+
             except Exception as e:
-                st.error(f"An error occurred while communicating with the Groq API: {e}")
-
-# Optional footer (blank or customizable)
-st.markdown(
-    """
-    <div style="text-align: center; color: gray;">
-        <hr>
-        <p>Python Chat Assistant powered by Groq API</p>
-    </div>
-    """,
-    unsafe_allow_html=True)
+                st.error(f"❌ Error communicating with the Groq API: {e}")
